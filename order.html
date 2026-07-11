@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Order &nbsp; Sugar &amp; Bloom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Hanken+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">Sugar <span>&amp;</span> Bloom</a>
+  <div class="links">
+    <a href="index.html">Find Your Cake</a>
+    <a href="menu.html">Menu</a>
+    <a href="reviews.html">Reviews</a>
+    <a href="order.html" class="active">Order</a>
+  </div>
+</nav>
+
+<section class="page-head" style="padding-bottom:20px">
+  <div class="wrap">
+    <div class="sec-head reveal" style="margin-bottom:0">
+      <div class="sec-kicker">Place an Order</div>
+      <h2 class="sec-title">Let's bake something <em>unforgettable.</em></h2>
+    </div>
+  </div>
+</section>
+
+<section class="contact-sec" style="padding-top:20px">
+  <div class="wrap">
+    <div class="contact-grid">
+      <div class="contact-info reveal">
+        <p>Tell us about your occasion and we'll be in touch within 24 hours with a quote and tasting options.</p>
+        <div class="contact-detail">
+          <span><small>Studio</small></span>
+          <span>14 Marigold Lane, Portland</span>
+          <a href="tel:+15035550137"><small>Call</small>&nbsp; (503) 555 0137</a>
+          <a href="mailto:hello@sugarandbloom.co"><small>Email</small>&nbsp; hello@sugarandbloom.co</a>
+          <span><small>Hours</small>&nbsp; Tue to Sat &middot; 8am to 5pm</span>
+        </div>
+      </div>
+
+      <form id="orderForm" novalidate class="reveal">
+        <div id="selectedCake" hidden style="margin-bottom:22px;padding:16px 18px;border-radius:14px;background:var(--rose,#f6d9de);color:var(--wine-deep,#5a2331)">
+          <div style="font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;opacity:.75;margin-bottom:6px">Your cake from the quiz</div>
+          <strong id="scName" style="display:block;font-size:1.05rem"></strong>
+          <span id="scMeta" style="font-size:.9rem;opacity:.85"></span>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="name">Your name</label>
+            <input type="text" id="name" name="name" placeholder="Ada Lovelace" required />
+          </div>
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" placeholder="(503) 555 0100" required />
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="ada@email.com" required />
+          </div>
+          <div class="field">
+            <label for="date">Date needed</label>
+            <input type="date" id="date" name="date" required />
+          </div>
+        </div>
+        <div class="field">
+          <label for="message">Tell us about your cake</label>
+          <textarea id="message" name="message" placeholder="Occasion, flavours, number of guests, any inspiration..." required></textarea>
+        </div>
+        <button type="submit" class="btn form-submit">Send order request <span class="arrow">&rarr;</span></button>
+        <div class="form-ok" id="formOk" role="status" aria-live="polite">🌸 Thank you! Your order request has been sent successfully. We'll be in touch within one business day.</div>
+        <div class="form-err" id="formErr" role="alert" aria-live="assertive"></div>
+        <div class="form-note">We reply within one business day. No deposit required to enquire.</div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="flogo">Sugar &amp; Bloom</div>
+  <p>Handcrafted cakes &amp; seasonal patisserie</p>
+  <div class="fline"></div>
+  <small>&copy; 2026 Sugar &amp; Bloom Bakery &nbsp;&middot;&nbsp; Made with butter, patience &amp; a little magic</small>
+</footer>
+
+<script src="config.js"></script>
+<script src="main.js"></script>
+<script>
+/* ============== CONTACT FORM ============== */
+const form=document.getElementById('orderForm');
+const ok=document.getElementById('formOk');
+const errBox=document.getElementById('formErr');
+const submitBtn=form.querySelector('.form-submit');
+
+/* Pull the cake chosen in the homepage quiz (if any) so it travels to the email. */
+let selection=null;
+try{
+  const raw=sessionStorage.getItem('sb_selection');
+  if(raw){
+    const s=JSON.parse(raw);
+    if(s && s.cake){
+      selection=s;
+      const box=document.getElementById('selectedCake');
+      document.getElementById('scName').textContent='The '+s.cake;
+      const meta=[s.size,s.price?('from '+s.price):null].filter(Boolean).join(' · ');
+      document.getElementById('scMeta').textContent=meta;
+      box.hidden=false;
+    }
+  }
+}catch(_){}
+const SUBMIT_LABEL=submitBtn.innerHTML;
+
+// Show exactly one of the two message boxes (or neither) at a time.
+function showMessage(kind,text){
+  if(kind==='ok'){
+    errBox.classList.remove('show');
+    ok.classList.add('show');
+  }else if(kind==='err'){
+    ok.classList.remove('show');
+    errBox.textContent=text;
+    errBox.classList.add('show');
+  }else{
+    ok.classList.remove('show');
+    errBox.classList.remove('show');
+  }
+}
+
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  // Clear any message from a previous attempt before validating again.
+  showMessage('none');
+  let valid=true;
+  form.querySelectorAll('[required]').forEach(inp=>{
+    inp.classList.remove('err');
+    if(!inp.value.trim() || (inp.type==='email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(inp.value))){
+      inp.classList.add('err'); valid=false;
+    }
+  });
+  if(!valid){
+    submitBtn.disabled=false;
+    submitBtn.innerHTML=SUBMIT_LABEL;
+    showMessage('err','Please complete all required fields before submitting.');
+    errBox.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+
+  const payload={
+    name:document.getElementById('name').value.trim(),
+    phone:document.getElementById('phone').value.trim(),
+    email:document.getElementById('email').value.trim(),
+    date:document.getElementById('date').value.trim(),
+    message:document.getElementById('message').value.trim()
+  };
+  if(selection){ payload.selection=selection; }
+
+  submitBtn.disabled=true;
+  submitBtn.textContent='Sending...';
+  try{
+    const res=await fetch(`${window.SB_API_BASE}/order`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok || !data.ok){
+      // Highlight any fields the server rejected, then surface the failure.
+      const invalidFields=data.errors||[];
+      invalidFields.forEach(f=>{
+        const el=document.getElementById(f);
+        if(el) el.classList.add('err');
+      });
+      throw new Error('submit failed');
+    }
+
+  }catch(err){
+    // Re-enable the button and show the error, hiding any success message.
+    submitBtn.disabled=false;
+    submitBtn.innerHTML=SUBMIT_LABEL;
+    showMessage('err','⚠️ Your request could not be sent. Please try again in a moment or contact us by email.');
+    errBox.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+
+  // Success: keep the message up until the user leaves or refreshes the page.
+  try{ sessionStorage.removeItem('sb_selection'); }catch(_){}
+  showMessage('ok');
+  submitBtn.disabled=true;
+  submitBtn.textContent='Request Sent';
+  ok.scrollIntoView({behavior:'smooth',block:'center'});
+});
+</script>
+</body>
+</html>

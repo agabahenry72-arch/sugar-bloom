@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sugar &amp; Bloom &nbsp; Handcrafted Cakes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Hanken+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">Sugar <span>&amp;</span> Bloom</a>
+  <div class="links">
+    <a href="index.html" class="active">Find Your Cake</a>
+    <a href="menu.html">Menu</a>
+    <a href="reviews.html">Reviews</a>
+    <a href="order.html">Order</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grad"></div>
+  <div class="wrap">
+    <div class="eyebrow reveal r1">Est. 2014 &nbsp;&middot;&nbsp; Small batch patisserie</div>
+    <h1 class="reveal r2">Handcrafted cakes for life's <em>sweetest</em> moments</h1>
+    <p class="sub reveal r3">Every tier is baked to order, layered by hand, and finished with seasonal blooms. No two are ever quite the same, and that's the point.</p>
+    <div class="hero-cta reveal r4">
+      <a href="#quiz" class="btn btn-primary">Find your perfect cake <span class="arrow">&rarr;</span></a>
+      <a href="menu.html" class="btn btn-ghost">Browse the menu</a>
+    </div>
+  </div>
+</header>
+
+<!-- QUIZ -->
+<section class="quiz-sec" id="quiz">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-kicker">The Cake Matchmaker</div>
+      <h2 class="sec-title">Answer three questions,<br>meet <em>your</em> cake.</h2>
+    </div>
+
+    <div class="quiz-shell reveal">
+      <div class="quiz-progress" id="bar"></div>
+
+      <!-- Q1 -->
+      <div class="slide active enter" data-q="0">
+        <div class="quiz-count">Question 1 of 3</div>
+        <div class="q-text">What are we <em>celebrating?</em></div>
+        <div class="options">
+          <button class="opt" data-val="birthday"><span class="key">A</span> A birthday</button>
+          <button class="opt" data-val="wedding"><span class="key">B</span> A wedding</button>
+          <button class="opt" data-val="anniversary"><span class="key">C</span> An anniversary</button>
+          <button class="opt" data-val="justbecause"><span class="key">D</span> Just because</button>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="slide" data-q="1">
+        <div class="quiz-count">Question 2 of 3</div>
+        <div class="q-text">Which flavour makes you <em>weak?</em></div>
+        <div class="options">
+          <button class="opt" data-val="chocolate"><span class="key">A</span> Deep dark chocolate</button>
+          <button class="opt" data-val="vanilla"><span class="key">B</span> Vanilla bean</button>
+          <button class="opt" data-val="redvelvet"><span class="key">C</span> Red velvet</button>
+          <button class="opt" data-val="lemon"><span class="key">D</span> Bright lemon</button>
+          <button class="opt" data-val="surprise"><span class="key">E</span> Surprise me</button>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="slide" data-q="2">
+        <div class="quiz-count">Question 3 of 3</div>
+        <div class="q-text">And your <em>budget?</em></div>
+        <div class="options">
+          <button class="opt" data-val="low"><span class="key">A</span> Under $50</button>
+          <button class="opt" data-val="mid"><span class="key">B</span> $50 to $100</button>
+          <button class="opt" data-val="high"><span class="key">C</span> $200 plus</button>
+        </div>
+      </div>
+
+      <!-- RESULT -->
+      <div class="slide" data-q="3">
+        <div id="result"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="flogo">Sugar &amp; Bloom</div>
+  <p>Handcrafted cakes &amp; seasonal patisserie</p>
+  <div class="fline"></div>
+  <small>&copy; 2026 Sugar &amp; Bloom Bakery &nbsp;&middot;&nbsp; Made with butter, patience &amp; a little magic</small>
+</footer>
+
+<script src="main.js"></script>
+<script>
+/* ============== QUIZ ENGINE ============== */
+const slides=[...document.querySelectorAll('.slide')];
+const bar=document.getElementById('bar');
+const answers={};
+const keys=['occasion','flavour','budget'];
+let step=0;
+
+function goTo(n){
+  const cur=slides[step];
+  cur.classList.remove('active','enter');
+  step=n;
+  const next=slides[step];
+  next.classList.add('active');
+  void next.offsetWidth; /* retrigger entrance animation */
+  next.classList.add('enter');
+  bar.style.width=((step)/3*100)+"%";
+}
+
+slides.forEach((slide,i)=>{
+  slide.querySelectorAll('.opt').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      answers[keys[i]]=btn.dataset.val;
+      if(i<2){ goTo(i+1); }
+      else { buildResult(); goTo(3); bar.style.width="100%"; }
+    });
+  });
+});
+
+/* keyboard shortcuts (A/B/C...) */
+document.addEventListener('keydown',e=>{
+  const active=slides[step];
+  if(!active || step>2) return;
+  const idx="abcde".indexOf(e.key.toLowerCase());
+  if(idx>-1){ const opts=active.querySelectorAll('.opt'); if(opts[idx]) opts[idx].click(); }
+});
+
+/* recommendation logic */
+const flavourMap={
+  chocolate:{name:"Midnight Ganache",emoji:"🍫",note:"deep, dark and unapologetic"},
+  vanilla:{name:"Vanilla Cloud",emoji:"🤍",note:"pure, elegant, endlessly loved"},
+  redvelvet:{name:"Velvet Bloom",emoji:"❤️",note:"nostalgic with a modern edge"},
+  lemon:{name:"Amalfi Lemon",emoji:"🍋",note:"bright, zippy and refreshing"},
+  surprise:{name:"Rose &amp; Pistachio",emoji:"🌸",note:"our floral, unexpected house favourite"},
+};
+const occasionWord={birthday:"birthday",wedding:"wedding",anniversary:"anniversary",justbecause:"'just because' moment"};
+const budgetMap={
+  low:{size:"6 inch round, serves 8",price:"$48"},
+  mid:{size:"8 inch double tier, serves 20",price:"$88"},
+  high:{size:"three tier showpiece, serves 60 plus",price:"$240"},
+};
+
+function buildResult(){
+  const f=flavourMap[answers.flavour]||flavourMap.surprise;
+  const b=budgetMap[answers.budget]||budgetMap.mid;
+  const occ=occasionWord[answers.occasion]||"celebration";
+  let name=f.name, emoji=f.emoji;
+  if(answers.budget==="high" && answers.occasion==="wedding"){ name="The Grand Tier, "+f.name+" flavour"; emoji="👑"; }
+  /* Carry the picked cake to the order form so it reaches the bakery's email. */
+  try{
+    sessionStorage.setItem('sb_selection',JSON.stringify({
+      cake:name.replace(/&amp;/g,'&'),
+      size:b.size,
+      price:b.price,
+      occasion:occ
+    }));
+  }catch(_){}
+  document.getElementById('result').innerHTML=`
+    <div class="result-tag">Your match</div>
+    <div class="result-card">
+      <div class="result-img"><span>${emoji}</span></div>
+      <div>
+        <div class="result-name">The <em>${name}</em></div>
+        <p class="result-desc">For your ${occ}, we'd handcraft you something ${f.note}. It's the cake we'd choose too.</p>
+        <div class="result-meta">
+          <div><small>Suggested size</small><strong>${b.size}</strong></div>
+          <div><small>From</small><strong>${b.price}</strong></div>
+        </div>
+        <a href="order.html" class="btn btn-primary" style="background:var(--rose);color:var(--wine-deep)">Order this cake <span class="arrow">&rarr;</span></a>
+        <button class="quiz-restart" id="restart">Start over</button>
+      </div>
+    </div>`;
+  document.getElementById('restart').addEventListener('click',()=>{
+    for(const k in answers) delete answers[k];
+    goTo(0); bar.style.width="0%";
+  });
+}
+</script>
+</body>
+</html>

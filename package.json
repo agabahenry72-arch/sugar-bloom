@@ -1,0 +1,11 @@
+{
+  "name": "sugar-and-bloom-frontend",
+  "version": "1.0.0",
+  "description": "Static marketing site for Sugar & Bloom bakery",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node serve.mjs",
+    "dev": "node --watch serve.mjs"
+  }
+}
