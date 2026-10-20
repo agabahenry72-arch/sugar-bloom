@@ -1,0 +1,23 @@
+name: Editorial
+version: 1
+description: >
+  Magazine-inspired: hairline rules, generous margins, oversized numerals and
+  framed images with captions. Calm and premium; lets the brand's heading
+  font do the talking.
+best_for: [thought leadership, guides, storytelling, premium and lifestyle brands]
+
+safe_margin: 96
+meta_margin: 64
+
+tones:
+  cta: dark
+  default: light
+
+limits:
+  cover: {eyebrow: 32, headline: 70, subhead: 130}
+  text: {eyebrow: 32, headline: 60, body: 340}
+  list: {eyebrow: 32, headline: 55, items: 4, item_title: 55, item_body: 120}
+  quote: {quote: 200, author: 40, role: 60}
+  stat: {eyebrow: 32, stat: 8, label: 80, body: 180, source: 90}
+  image: {headline: 60, caption: 160}
+  cta: {eyebrow: 32, headline: 55, body: 150, button: 32}

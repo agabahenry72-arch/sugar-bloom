@@ -1,0 +1,111 @@
+{% import "_ui.html.j2" as ui %}
+
+{% macro masthead(c) -%}
+<header class="ed-mast">
+  {{ ui.logo(c, "logo ed-logo") }}
+  {{ ui.page_number(c, "ed-meta") }}
+</header>
+{%- endmacro %}
+
+{% macro foot(c) -%}
+<footer class="ed-foot">
+  {{ ui.handle(c, "ed-meta") }}
+  {{ ui.swipe(c, "swipe ed-swipe") }}
+</footer>
+{%- endmacro %}
+
+{% macro cover(s, c) -%}
+{{ masthead(c) }}
+<main class="ed-body ed-cover" data-fit-box data-field="headline">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="ed-kicker") }}{% endif %}
+  {{ ui.text("h1", s.headline, "headline", role="headline", cls="h ed-cover-title") }}
+  {% if s.subhead %}
+  <div class="ed-dek-row">
+    <span class="ed-dek-rule"></span>
+    {{ ui.text("p", s.subhead, "subhead", cls="ed-dek") }}
+  </div>
+  {% endif %}
+</main>
+{{ foot(c) }}
+{%- endmacro %}
+
+{% macro text(s, c) -%}
+{{ masthead(c) }}
+<main class="ed-body" data-fit-box data-field="body">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="ed-kicker") }}{% endif %}
+  {% if s.headline %}{{ ui.text("h2", s.headline, "headline", role="headline", cls="h ed-title") }}{% endif %}
+  {{ ui.text("p", s.body, "body", cls="ed-copy") }}
+</main>
+{{ foot(c) }}
+{%- endmacro %}
+
+{% macro list(s, c) -%}
+{{ masthead(c) }}
+<main class="ed-body" data-fit-box data-field="items">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="ed-kicker") }}{% endif %}
+  {% if s.headline %}{{ ui.text("h2", s.headline, "headline", role="headline", cls="h ed-title") }}{% endif %}
+  <ol class="ed-list">
+    {% for item in s["items"] %}
+    <li>
+      {% if s.numbered %}<span class="h ed-num" data-qa="text" data-qa-role="body" data-field="items[{{ loop.index }}]">{{ loop.index }}</span>{% endif %}
+      <div class="ed-item">
+        {{ ui.text("p", item.title, "items[" ~ loop.index ~ "].title", cls="h ed-item-title") }}
+        {% if item.body %}{{ ui.text("p", item.body, "items[" ~ loop.index ~ "].body", cls="ed-item-body") }}{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+</main>
+{{ foot(c) }}
+{%- endmacro %}
+
+{% macro quote(s, c) -%}
+{{ masthead(c) }}
+<main class="ed-body ed-center" data-fit-box data-field="quote">
+  <span class="ed-ornament" aria-hidden="true"></span>
+  {{ ui.text("blockquote", s.quote, "quote", cls="h ed-quote") }}
+  {% if s.author %}
+  <div class="ed-byline">
+    {{ ui.text("p", s.author, "author", cls="ed-author") }}
+    {% if s.role %}{{ ui.text("p", s.role, "role", cls="ed-role") }}{% endif %}
+  </div>
+  {% endif %}
+</main>
+{{ foot(c) }}
+{%- endmacro %}
+
+{% macro stat(s, c) -%}
+{{ masthead(c) }}
+<main class="ed-body ed-center" data-fit-box data-field="label">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="ed-kicker") }}{% endif %}
+  {{ ui.text("p", s.stat, "stat", cls="h ed-stat") }}
+  <span class="ed-short-rule"></span>
+  {{ ui.text("h2", s.label, "label", role="headline", cls="h ed-stat-label") }}
+  {% if s.body %}{{ ui.text("p", s.body, "body", cls="ed-copy ed-narrow") }}{% endif %}
+  {% if s.source %}{{ ui.text("p", s.source, "source", cls="ed-source") }}{% endif %}
+</main>
+{{ foot(c) }}
+{%- endmacro %}
+
+{% macro image(s, c) -%}
+{{ masthead(c) }}
+<main class="ed-body ed-figure-body" data-fit-box data-field="caption">
+  <figure class="ed-figure">
+    <img src="{{ s.image_src }}" alt="" data-qa="image" style="object-fit: {{ s.fit }}; object-position: {{ s.focus }};">
+  </figure>
+  {% if s.headline %}{{ ui.text("h2", s.headline, "headline", role="headline", cls="h ed-fig-title") }}{% endif %}
+  {% if s.caption %}{{ ui.text("p", s.caption, "caption", cls="ed-caption") }}{% endif %}
+</main>
+{{ foot(c) }}
+{%- endmacro %}
+
+{% macro cta(s, c) -%}
+{{ masthead(c) }}
+<main class="ed-body ed-center" data-fit-box data-field="headline">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="ed-kicker") }}{% endif %}
+  {{ ui.text("h2", s.headline, "headline", role="headline", cls="h ed-cta-title") }}
+  {% if s.body %}{{ ui.text("p", s.body, "body", cls="ed-copy ed-narrow") }}{% endif %}
+  {% if s.button %}{{ ui.text("span", s.button, "button", cls="ed-button") }}{% endif %}
+</main>
+{{ foot(c) }}
+{%- endmacro %}

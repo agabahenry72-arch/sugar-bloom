@@ -1,0 +1,46 @@
+# Used by `carousel.py showcase` and `style-check` to preview a style with any brand.
+# client and style are replaced at run time.
+client: example-roastery
+style: bold-minimal
+title: Style showcase
+
+slides:
+  - layout: cover
+    eyebrow: Style preview
+    headline: How this style looks with **your brand**
+    subhead: Every slide type, in the client's own colours, fonts and logo.
+
+  - layout: list
+    headline: Three things to know
+    items:
+      - title: Colours come from the brand kit
+        body: Each tone picks readable text and highlight colours automatically.
+      - title: Fonts are embedded
+        body: The exact brand typefaces, in the PNGs and the PDF.
+      - title: Copy fits itself
+        body: Longer copy shrinks a little; too long fails QA.
+
+  - layout: text
+    headline: A plain text slide
+    body: Use this for a short explanation or a single idea. **Highlight** the phrase that matters most.
+
+  - layout: stat
+    eyebrow: By the numbers
+    stat: "72%"
+    label: A big number with a **short label**
+    source: "Source: style showcase"
+
+  - layout: quote
+    quote: A quote slide gives a testimonial or expert line room to breathe.
+    author: Alex Rivera
+    role: Example customer
+
+  - layout: image
+    image: assets/pour-over.jpg
+    headline: An image slide
+    caption: Photos are cropped to fit; QA warns if one is too small to look sharp.
+
+  - layout: cta
+    headline: End with a clear next step
+    body: Follow, save, share or visit.
+    button: Follow for more

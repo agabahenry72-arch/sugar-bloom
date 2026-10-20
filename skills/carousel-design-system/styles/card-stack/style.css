@@ -1,0 +1,137 @@
+/* Card Stack: rounded cards on the brand colour. Tokens only. */
+
+.slide { padding: 64px 72px 72px; isolation: isolate; }
+
+/* Decorative shapes, tinted from the highlight colour. */
+.cs-blob { position: absolute; border-radius: 50%; z-index: -1; background: color-mix(in srgb, var(--hl) 22%, transparent); }
+.cs-blob-a { width: 620px; height: 620px; right: -220px; top: -180px; }
+.cs-blob-b { width: 420px; height: 420px; left: -200px; bottom: -160px; background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.slide:nth-child(even) .cs-blob-a { right: auto; left: -240px; top: 260px; }
+.slide:nth-child(even) .cs-blob-b { left: auto; right: -160px; bottom: -200px; }
+
+.cs-top, .cs-bottom {
+  flex: none;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 24px;
+}
+.cs-chip {
+  font-size: 26px;
+  font-weight: var(--body-bold-weight);
+  letter-spacing: 0.04em;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--on-card);
+}
+.cs-handle { font-size: 28px; font-weight: var(--body-bold-weight); color: var(--fg); }
+.cs-swipe {
+  width: 76px;
+  height: 76px;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--on-card);
+}
+.cs-swipe svg { width: 40px; height: 40px; }
+
+/* Open (no card) slides: cover, stat, cta. */
+.cs-open {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  gap: calc(36px * var(--fit, 1));
+  padding: 40px 24px;
+}
+.cs-tag {
+  align-self: flex-start;
+  font-size: calc(28px * var(--fit, 1));
+  font-weight: var(--body-bold-weight);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.45em 0.9em;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--on-card);
+}
+.cs-cover-title { font-size: calc(128px * var(--fit, 1)); }
+.cs-lead { font-size: calc(46px * var(--fit, 1)); line-height: 1.3; max-width: 860px; }
+
+/* Card slides. */
+.cs-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  gap: calc(32px * var(--fit, 1));
+  margin: 28px 0;
+  padding: 72px 64px;
+  border-radius: 56px;
+  background: var(--card);
+  color: var(--on-card);
+  box-shadow: 0 30px 60px -30px color-mix(in srgb, var(--fg) 30%, transparent);
+}
+.cs-card .hl { color: var(--card-hl-small); }
+.cs-card .h .hl { color: var(--card-hl); }
+.cs-kicker {
+  font-size: calc(28px * var(--fit, 1));
+  font-weight: var(--body-bold-weight);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--card-hl-small);
+}
+.cs-title { font-size: calc(80px * var(--fit, 1)); }
+.cs-copy { font-size: calc(44px * var(--fit, 1)); line-height: 1.45; color: var(--on-card); }
+
+.cs-list { list-style: none; display: flex; flex-direction: column; gap: calc(30px * var(--fit, 1)); }
+.cs-list li { display: flex; gap: 28px; align-items: flex-start; }
+.cs-badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: calc(68px * var(--fit, 1));
+  height: calc(68px * var(--fit, 1));
+  border-radius: 50%;
+  background: var(--hl);
+  color: var(--on-hl);
+  font-size: calc(34px * var(--fit, 1));
+  font-weight: var(--body-bold-weight);
+}
+.cs-tick { flex: none; width: 28px; height: 28px; margin-top: 12px; border-radius: 8px; background: var(--hl); }
+.cs-item { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding-top: calc(8px * var(--fit, 1)); }
+.cs-item-title { font-size: calc(44px * var(--fit, 1)); font-weight: var(--body-bold-weight); line-height: 1.25; }
+.cs-item-body { font-size: calc(36px * var(--fit, 1)); line-height: 1.4; color: var(--card-muted); }
+
+.cs-quote-mark { font-size: calc(220px * var(--fit, 1)); line-height: 0.6; height: 0.4em; color: var(--card-hl); }
+.cs-quote { font-size: calc(68px * var(--fit, 1)); line-height: 1.18; }
+.cs-person { display: flex; gap: 24px; align-items: center; padding-top: 8px; }
+.cs-avatar { flex: none; width: 72px; height: 72px; border-radius: 50%; background: var(--hl); }
+.cs-author { font-size: calc(38px * var(--fit, 1)); font-weight: var(--body-bold-weight); }
+.cs-role { font-size: calc(32px * var(--fit, 1)); color: var(--card-muted); }
+
+.cs-stat-wrap { align-items: flex-start; }
+.cs-stat { font-size: calc(270px * var(--fit, 1)); line-height: 0.9; color: var(--hl); letter-spacing: -0.03em; }
+.cs-stat-label { font-size: calc(72px * var(--fit, 1)); }
+.cs-source { font-size: calc(28px * var(--fit, 1)); color: var(--muted); }
+
+.cs-photo-card { justify-content: flex-start; padding: 28px 28px 56px; gap: calc(24px * var(--fit, 1)); }
+.cs-photo { flex: none; height: 600px; border-radius: 36px; overflow: hidden; }
+.cs-photo img { width: 100%; height: 100%; }
+.cs-photo-text { display: flex; flex-direction: column; gap: calc(16px * var(--fit, 1)); padding: 12px 36px 0; min-height: 0; }
+.cs-photo-title { font-size: calc(66px * var(--fit, 1)); }
+.cs-photo-caption { font-size: calc(38px * var(--fit, 1)); color: var(--card-muted); }
+
+.cs-cta-title { font-size: calc(112px * var(--fit, 1)); }
+.cs-button {
+  display: inline-block;
+  padding: 0.6em 1.3em;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--on-card);
+  font-size: calc(42px * var(--fit, 1));
+  font-weight: var(--body-bold-weight);
+}

@@ -1,0 +1,120 @@
+{% import "_ui.html.j2" as ui %}
+
+{% macro shapes() -%}
+<span class="cs-blob cs-blob-a" aria-hidden="true"></span>
+<span class="cs-blob cs-blob-b" aria-hidden="true"></span>
+{%- endmacro %}
+
+{% macro top(c) -%}
+<header class="cs-top">{{ ui.logo(c) }}{{ ui.page_number(c, "cs-chip") }}</header>
+{%- endmacro %}
+
+{% macro bottom(c) -%}
+<footer class="cs-bottom">{{ ui.handle(c, "cs-handle") }}{{ ui.swipe(c, "swipe cs-swipe") }}</footer>
+{%- endmacro %}
+
+{% macro cover(s, c) -%}
+{{ shapes() }}
+{{ top(c) }}
+<main class="cs-open" data-fit-box data-field="headline">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="cs-tag") }}{% endif %}
+  {{ ui.text("h1", s.headline, "headline", role="headline", cls="h cs-cover-title") }}
+  {% if s.subhead %}{{ ui.text("p", s.subhead, "subhead", cls="cs-lead") }}{% endif %}
+</main>
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro card(field) -%}
+<main class="cs-card" data-fit-box data-field="{{ field }}">{{ caller() }}</main>
+{%- endmacro %}
+
+{% macro text(s, c) -%}
+{{ shapes() }}
+{{ top(c) }}
+{% call card("body") %}
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="cs-kicker") }}{% endif %}
+  {% if s.headline %}{{ ui.text("h2", s.headline, "headline", role="headline", cls="h cs-title") }}{% endif %}
+  {{ ui.text("p", s.body, "body", cls="cs-copy") }}
+{% endcall %}
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro list(s, c) -%}
+{{ shapes() }}
+{{ top(c) }}
+{% call card("items") %}
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="cs-kicker") }}{% endif %}
+  {% if s.headline %}{{ ui.text("h2", s.headline, "headline", role="headline", cls="h cs-title") }}{% endif %}
+  <ol class="cs-list">
+    {% for item in s["items"] %}
+    <li>
+      {% if s.numbered %}<span class="cs-badge" data-qa="text" data-qa-role="body" data-field="items[{{ loop.index }}]">{{ loop.index }}</span>{% else %}<span class="cs-tick" aria-hidden="true"></span>{% endif %}
+      <div class="cs-item">
+        {{ ui.text("p", item.title, "items[" ~ loop.index ~ "].title", cls="cs-item-title") }}
+        {% if item.body %}{{ ui.text("p", item.body, "items[" ~ loop.index ~ "].body", cls="cs-item-body") }}{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+{% endcall %}
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro quote(s, c) -%}
+{{ shapes() }}
+{{ top(c) }}
+{% call card("quote") %}
+  <span class="cs-quote-mark h" aria-hidden="true">&ldquo;</span>
+  {{ ui.text("blockquote", s.quote, "quote", cls="h cs-quote") }}
+  {% if s.author %}
+  <div class="cs-person">
+    <span class="cs-avatar" aria-hidden="true"></span>
+    <div>
+      {{ ui.text("p", s.author, "author", cls="cs-author") }}
+      {% if s.role %}{{ ui.text("p", s.role, "role", cls="cs-role") }}{% endif %}
+    </div>
+  </div>
+  {% endif %}
+{% endcall %}
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro stat(s, c) -%}
+{{ shapes() }}
+{{ top(c) }}
+<main class="cs-open cs-stat-wrap" data-fit-box data-field="label">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="cs-tag") }}{% endif %}
+  {{ ui.text("p", s.stat, "stat", cls="h cs-stat") }}
+  {{ ui.text("h2", s.label, "label", role="headline", cls="h cs-stat-label") }}
+  {% if s.body %}{{ ui.text("p", s.body, "body", cls="cs-lead") }}{% endif %}
+  {% if s.source %}{{ ui.text("p", s.source, "source", cls="cs-source") }}{% endif %}
+</main>
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro image(s, c) -%}
+{{ shapes() }}
+{{ top(c) }}
+<main class="cs-card cs-photo-card" data-fit-box data-field="caption">
+  <figure class="cs-photo">
+    <img src="{{ s.image_src }}" alt="" data-qa="image" style="object-fit: {{ s.fit }}; object-position: {{ s.focus }};">
+  </figure>
+  <div class="cs-photo-text">
+    {% if s.headline %}{{ ui.text("h2", s.headline, "headline", role="headline", cls="h cs-title cs-photo-title") }}{% endif %}
+    {% if s.caption %}{{ ui.text("p", s.caption, "caption", cls="cs-copy cs-photo-caption") }}{% endif %}
+  </div>
+</main>
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro cta(s, c) -%}
+{{ shapes() }}
+{{ top(c) }}
+<main class="cs-open cs-cta" data-fit-box data-field="headline">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="cs-tag") }}{% endif %}
+  {{ ui.text("h2", s.headline, "headline", role="headline", cls="h cs-cta-title") }}
+  {% if s.body %}{{ ui.text("p", s.body, "body", cls="cs-lead") }}{% endif %}
+  {% if s.button %}<div>{{ ui.text("span", s.button, "button", cls="cs-button") }}</div>{% endif %}
+</main>
+{{ bottom(c) }}
+{%- endmacro %}

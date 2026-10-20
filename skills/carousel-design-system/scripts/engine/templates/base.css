@@ -1,0 +1,60 @@
+/* Shared foundation for every style. Styles add layout on top of this. */
+@page { size: 1080px 1350px; margin: 0; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { width: 1080px; }
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+  font-kerning: normal;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.slide {
+  position: relative;
+  width: 1080px;
+  height: 1350px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-weight: var(--body-weight);
+  letter-spacing: var(--body-tracking);
+  break-after: page;
+  page-break-after: always;
+}
+.slide:last-child { break-after: auto; page-break-after: auto; }
+
+/* Brand heading typography: any element with .h uses the heading font. */
+.h {
+  font-family: var(--font-heading);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  line-height: var(--heading-leading, 1.05);
+  text-wrap: balance;
+}
+.h strong { font-weight: inherit; }
+
+p, li, blockquote, figcaption { text-wrap: pretty; }
+h1, h2, h3, p, li, blockquote, figcaption, span { overflow-wrap: normal; word-break: normal; hyphens: manual; }
+
+strong { font-weight: var(--body-bold-weight); }
+/* Highlights: small text needs 4.5:1 contrast, headings only 3:1. */
+.hl { color: var(--hl-small); }
+.h .hl { color: var(--hl); }
+em { font-style: italic; }
+.para-gap { display: block; height: 0.6em; }
+
+img { display: block; }
+.logo { height: var(--logo-height); width: auto; max-width: 360px; object-fit: contain; }
+
+/* Fit boxes shrink their copy (via --fit) until it fits; QA fails if it still doesn't. */
+[data-fit-box] { min-height: 0; overflow: hidden; }
+
+.swipe { display: inline-flex; align-items: center; }
+.swipe svg { width: 56px; height: 56px; }

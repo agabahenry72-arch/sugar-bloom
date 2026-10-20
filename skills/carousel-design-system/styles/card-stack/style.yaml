@@ -1,0 +1,23 @@
+name: Card Stack
+version: 1
+description: >
+  Content sits on big rounded cards over a full brand-colour background, with
+  soft decorative shapes. Friendly, high-contrast and instantly recognisable
+  in a feed as the client's colour.
+best_for: [community, lifestyle, product tips, friendly B2C brands, swipeable checklists]
+
+safe_margin: 96
+meta_margin: 56
+
+tones:
+  stat: dark
+  default: brand
+
+limits:
+  cover: {eyebrow: 28, headline: 55, subhead: 100}
+  text: {eyebrow: 28, headline: 50, body: 260}
+  list: {eyebrow: 28, headline: 45, items: 5, item_title: 55, item_body: 90}
+  quote: {quote: 160, author: 40, role: 60}
+  stat: {eyebrow: 28, stat: 8, label: 70, body: 150, source: 80}
+  image: {headline: 55, caption: 120}
+  cta: {eyebrow: 28, headline: 50, body: 120, button: 30}

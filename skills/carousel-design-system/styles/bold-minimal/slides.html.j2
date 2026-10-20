@@ -1,0 +1,103 @@
+{% import "_ui.html.j2" as ui %}
+
+{% macro top(c) -%}
+<header class="bm-bar">{{ ui.logo(c) }}{{ ui.page_number(c) }}</header>
+{%- endmacro %}
+
+{% macro bottom(c) -%}
+<footer class="bm-bar">{{ ui.handle(c) }}{{ ui.swipe(c) }}</footer>
+{{ ui.progress(c, "bm-progress") }}
+{%- endmacro %}
+
+{% macro cover(s, c) -%}
+{{ top(c) }}
+<main class="bm-body bm-cover" data-fit-box data-field="headline">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="bm-eyebrow") }}{% endif %}
+  <span class="bm-rule"></span>
+  {{ ui.text("h1", s.headline, "headline", role="headline", cls="h bm-cover-title") }}
+  {% if s.subhead %}{{ ui.text("p", s.subhead, "subhead", cls="bm-subhead") }}{% endif %}
+</main>
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro text(s, c) -%}
+{{ top(c) }}
+<main class="bm-body" data-fit-box data-field="body">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="bm-eyebrow") }}{% endif %}
+  {% if s.headline %}{{ ui.text("h2", s.headline, "headline", role="headline", cls="h bm-title") }}{% endif %}
+  {{ ui.text("p", s.body, "body", cls="bm-copy") }}
+</main>
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro list(s, c) -%}
+{{ top(c) }}
+<main class="bm-body" data-fit-box data-field="items">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="bm-eyebrow") }}{% endif %}
+  {% if s.headline %}{{ ui.text("h2", s.headline, "headline", role="headline", cls="h bm-title") }}{% endif %}
+  <ol class="bm-list">
+    {% for item in s["items"] %}
+    <li>
+      {% if s.numbered %}<span class="bm-num h" data-qa="text" data-qa-role="body" data-field="items[{{ loop.index }}]">{{ "%02d"|format(loop.index) }}</span>{% else %}<span class="bm-dot"></span>{% endif %}
+      <div class="bm-item">
+        {{ ui.text("p", item.title, "items[" ~ loop.index ~ "].title", cls="bm-item-title") }}
+        {% if item.body %}{{ ui.text("p", item.body, "items[" ~ loop.index ~ "].body", cls="bm-item-body") }}{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+</main>
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro quote(s, c) -%}
+{{ top(c) }}
+<main class="bm-body" data-fit-box data-field="quote">
+  <span class="bm-quote-mark h" aria-hidden="true">&ldquo;</span>
+  {{ ui.text("blockquote", s.quote, "quote", cls="h bm-quote") }}
+  {% if s.author %}
+  <div class="bm-attrib">
+    {{ ui.text("p", s.author, "author", cls="bm-author") }}
+    {% if s.role %}{{ ui.text("p", s.role, "role", cls="bm-role") }}{% endif %}
+  </div>
+  {% endif %}
+</main>
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro stat(s, c) -%}
+{{ top(c) }}
+<main class="bm-body" data-fit-box data-field="label">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="bm-eyebrow") }}{% endif %}
+  {{ ui.text("p", s.stat, "stat", cls="h bm-stat") }}
+  {{ ui.text("h2", s.label, "label", role="headline", cls="h bm-stat-label") }}
+  {% if s.body %}{{ ui.text("p", s.body, "body", cls="bm-copy") }}{% endif %}
+  {% if s.source %}{{ ui.text("p", s.source, "source", cls="bm-source") }}{% endif %}
+</main>
+{{ bottom(c) }}
+{%- endmacro %}
+
+{% macro image(s, c) -%}
+<figure class="bm-figure">
+  <img src="{{ s.image_src }}" alt="" data-qa="image" style="object-fit: {{ s.fit }}; object-position: {{ s.focus }};">
+</figure>
+<div class="bm-image-panel">
+  <header class="bm-bar">{{ ui.logo(c) }}{{ ui.page_number(c) }}</header>
+  <main class="bm-body bm-image-body" data-fit-box data-field="caption">
+    {% if s.headline %}{{ ui.text("h2", s.headline, "headline", role="headline", cls="h bm-title") }}{% endif %}
+    {% if s.caption %}{{ ui.text("p", s.caption, "caption", cls="bm-copy") }}{% endif %}
+  </main>
+  {{ bottom(c) }}
+</div>
+{%- endmacro %}
+
+{% macro cta(s, c) -%}
+{{ top(c) }}
+<main class="bm-body bm-cta" data-fit-box data-field="headline">
+  {% if s.eyebrow %}{{ ui.text("p", s.eyebrow, "eyebrow", cls="bm-eyebrow") }}{% endif %}
+  {{ ui.text("h2", s.headline, "headline", role="headline", cls="h bm-cta-title") }}
+  {% if s.body %}{{ ui.text("p", s.body, "body", cls="bm-subhead") }}{% endif %}
+  {% if s.button %}<div class="bm-button-row">{{ ui.text("span", s.button, "button", cls="bm-button") }}</div>{% endif %}
+</main>
+{{ bottom(c) }}
+{%- endmacro %}

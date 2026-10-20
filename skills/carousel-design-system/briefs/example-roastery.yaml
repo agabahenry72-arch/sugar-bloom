@@ -1,0 +1,48 @@
+# Example structured brief. Render with:
+#   python scripts/carousel.py render briefs/example-roastery.yaml
+client: example-roastery
+style: bold-minimal
+title: 5 ways to brew better coffee at home
+
+slides:
+  - layout: cover
+    eyebrow: Home brewing 101
+    headline: 5 ways to brew **better** coffee at home
+    subhead: Small changes, big difference. Swipe for the barista basics.
+
+  - layout: list
+    headline: Start with the basics
+    items:
+      - title: Buy whole beans
+        body: Ground coffee goes stale in minutes, beans last weeks.
+      - title: Grind just before brewing
+        body: A burr grinder gives an even grind and a cleaner cup.
+      - title: Weigh, don't scoop
+        body: Start with 60g of coffee per litre of water.
+
+  - layout: stat
+    stat: "93°C"
+    label: The sweet spot for **water temperature**
+    body: Boiling water scorches the grounds. Let the kettle rest for 30 seconds.
+
+  - layout: image
+    image: assets/pour-over.jpg
+    headline: Bloom before you brew
+    caption: Pour just enough water to wet the grounds, wait 30 seconds, then continue slowly.
+
+  - layout: quote
+    quote: Good coffee is mostly about **fresh beans** and patience. The rest is detail.
+    author: Maya Okafor
+    role: Head Roaster, Ember Roastery
+
+  - layout: text
+    headline: Keep your kit clean
+    body: |
+      Old coffee oils turn rancid and make every cup taste bitter.
+
+      Rinse your brewer after every use and give it a proper clean once a week.
+
+  - layout: cta
+    headline: Save this for your next brew
+    body: New beans land every Friday. Come say hi.
+    button: Shop the roast

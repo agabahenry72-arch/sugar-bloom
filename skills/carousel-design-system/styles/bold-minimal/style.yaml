@@ -1,0 +1,28 @@
+name: Bold Minimal
+version: 1
+description: >
+  Big, confident headlines with lots of space. Solid brand-colour cover and
+  closing slides bookend clean light content slides, with a progress bar
+  along the bottom.
+best_for: [tips, how-tos, listicles, education, announcements]
+
+# QA: copy must stay this far from the edges (meta = page numbers, handle, logo)
+safe_margin: 96
+meta_margin: 56
+
+# Default tone per layout (a slide can override with `tone:` in the brief)
+tones:
+  cover: brand
+  cta: brand
+  stat: dark
+  default: light
+
+# Soft copy limits (characters, after removing ** markers). Over = QA warning.
+limits:
+  cover: {eyebrow: 28, headline: 60, subhead: 110}
+  text: {eyebrow: 28, headline: 55, body: 300}
+  list: {eyebrow: 28, headline: 50, items: 5, item_title: 60, item_body: 110}
+  quote: {quote: 180, author: 40, role: 60}
+  stat: {eyebrow: 28, stat: 8, label: 70, body: 160, source: 80}
+  image: {headline: 60, caption: 140}
+  cta: {eyebrow: 28, headline: 50, body: 140, button: 32}

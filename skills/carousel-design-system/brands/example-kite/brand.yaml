@@ -1,0 +1,34 @@
+# Sample client: a fictional fintech app. Shows the same styles in a very different brand.
+name: Kite Finance
+handle: "@kitefinance"
+website: kite.money
+
+colors:
+  primary: "#3B5BDB"     # kite blue
+  secondary: "#0B1533"   # midnight
+  accent: "#2DD4BF"      # mint
+  background: "#F4F6FB"
+  surface: "#FFFFFF"
+  text: "#0B1533"
+
+fonts:
+  heading:
+    family: Space Grotesk
+    weight: 700
+    files: [fonts/SpaceGrotesk-Variable.ttf]
+    letter_spacing: -0.025em
+    line_height: 1.02
+  body:
+    family: Manrope
+    weight: 500
+    bold_weight: 800
+    files: [fonts/Manrope-Variable.ttf]
+
+logo:
+  default: logo.svg
+  inverse: logo-inverse.svg
+  height: 52
+
+notes: >
+  Plain-English money tips. Confident, upbeat, no jargon. Numbers always as
+  digits. American spelling.

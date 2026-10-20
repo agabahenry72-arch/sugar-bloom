@@ -1,0 +1,34 @@
+# Sample client: a fictional coffee roaster. Copy this folder to start a real client.
+name: Ember Roastery
+handle: "@emberroastery"
+website: emberroastery.co
+
+colors:
+  primary: "#B4441B"     # burnt orange
+  secondary: "#2B1D16"   # espresso
+  accent: "#F2B544"      # amber
+  background: "#FBF4EA"  # oat
+  surface: "#FFFFFF"
+  text: "#2B1D16"
+
+fonts:
+  heading:
+    family: DM Serif Display
+    weight: 400
+    files: [fonts/DMSerifDisplay-Regular.ttf]
+    fallback: Georgia, serif
+    letter_spacing: -0.01em
+  body:
+    family: DM Sans
+    weight: 400
+    bold_weight: 700
+    files: [fonts/DMSans-Variable.ttf]
+
+logo:
+  default: logo.svg          # for light backgrounds
+  inverse: logo-inverse.svg  # for dark / brand-colour backgrounds
+  height: 56
+
+notes: >
+  Warm, knowledgeable, never snobby. British spelling. Highlight one key
+  phrase per headline at most.

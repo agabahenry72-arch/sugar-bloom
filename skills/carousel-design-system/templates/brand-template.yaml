@@ -1,0 +1,44 @@
+# Brand kit. Full reference: reference/brand-kits.md
+# Put logo files and a fonts/ folder next to this file. Hex colours must be quoted.
+name: "Client Name"
+handle: "@clienthandle"        # shown in the slide footer (optional)
+website: client.com            # used if there is no handle (optional)
+
+colors:
+  primary: "#000000"     # main brand colour: cover & closing slides
+  secondary: "#000000"   # optional: second brand colour
+  accent: "#000000"      # optional: highlights, buttons, progress bar
+  background: "#FFFFFF"  # light canvas for content slides
+  surface: "#FFFFFF"     # optional: cards/panels on top of the background
+  text: "#000000"        # body text on the background (needs 4.5:1 contrast)
+  # Optional overrides; otherwise picked automatically for contrast:
+  # dark: "#111111"        background of `tone: dark` slides
+  # on_primary: "#FFFFFF"  text on primary
+  # on_accent: "#111111"   text on accent
+  # on_dark: "#FFFFFF"     text on dark
+
+fonts:
+  heading:
+    family: "Heading Font Name"   # exact family name
+    weight: 700
+    files: [fonts/HeadingFont-Bold.ttf]   # .ttf .otf .woff .woff2, embedded in exports
+    # fallback: sans-serif
+    # letter_spacing: -0.02em
+    # uppercase: false
+    # line_height: 1.05
+  body:
+    family: "Body Font Name"
+    weight: 400
+    bold_weight: 700
+    files:
+      - fonts/BodyFont-Regular.ttf
+      - fonts/BodyFont-Bold.ttf
+
+logo:
+  default: logo.svg            # for light backgrounds (SVG or transparent PNG)
+  inverse: logo-inverse.svg    # for dark/brand-colour backgrounds (recommended)
+  height: 56                   # px on a 1080px-wide slide
+
+notes: >
+  Tone of voice, spelling (UK/US), words to avoid, anything a designer should
+  know when revising this client's copy.

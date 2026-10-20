@@ -1,0 +1,63 @@
+# Used by `carousel.py style-check`: copy near the usual limits, every tone,
+# long words and a long list. A production style must pass this without QA errors.
+client: example-roastery
+style: bold-minimal
+title: Style stress test
+
+slides:
+  - layout: cover
+    tone: dark
+    eyebrow: Stress test eyebrow
+    headline: A deliberately long cover headline that runs to sixty chars
+    subhead: A longer subhead that keeps going to check that the layout handles two full lines of supporting copy.
+
+  - layout: list
+    tone: accent
+    eyebrow: Five items
+    headline: A list with five items and a long headline
+    items:
+      - title: First item with a reasonably long title here
+        body: Supporting copy that runs a little long to test wrapping behaviour.
+      - title: Second item title
+        body: Shorter body.
+      - title: Third item with a title that wraps onto two lines maybe
+      - title: Fourth item title
+        body: Another line of supporting copy for this list item.
+      - title: Fifth item title that is long enough to matter
+        body: Final supporting copy line for the stress test of this list.
+
+  - layout: text
+    tone: brand
+    eyebrow: Long body
+    headline: A text slide with a long body
+    body: |
+      This body copy is intentionally long. It keeps going to check that the style can hold a substantial paragraph of text without overflowing.
+
+      A second paragraph follows, with internationalisation, responsibilities and other long words to check line breaking.
+
+  - layout: stat
+    tone: light
+    eyebrow: Stat
+    stat: "1,250%"
+    label: A stat with a long label that wraps onto a second line
+    body: Supporting copy under the stat, long enough to wrap onto a couple of lines.
+    source: "Source: An example research organisation, 2026"
+
+  - layout: quote
+    tone: accent
+    quote: A long testimonial quote that goes on for a while, to check that big quote type still fits comfortably on the slide without any trouble.
+    author: A person with a long name
+    role: Their fairly long job title, Company Name
+
+  - layout: image
+    tone: dark
+    image: assets/pour-over.jpg
+    headline: An image slide with a longer headline
+    caption: A caption that runs onto two or three lines to make sure the panel below the image holds it.
+
+  - layout: cta
+    tone: light
+    eyebrow: Last slide
+    headline: A closing call to action that is long
+    body: Supporting line for the call to action that wraps onto two lines.
+    button: A long button label

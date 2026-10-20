@@ -1,0 +1,31 @@
+{#- Shared building blocks for style templates: {% import "_ui.html.j2" as ui %}
+
+  Every visible piece of copy goes through ui.text so QA can find it:
+    data-qa="text"         checked for contrast, overflow, safe zone and overlap
+    data-qa-role="..."     headline | body | meta (page numbers, handles: smaller safe margin)
+    data-field="..."       the brief field it came from, so QA can say what to edit
+-#}
+
+{% macro text(tag, value, field, role="body", cls="") -%}
+<{{ tag }} class="{{ cls }}" data-qa="text" data-qa-role="{{ role }}" data-field="{{ field }}">{{ md(value) }}</{{ tag }}>
+{%- endmacro %}
+
+{% macro logo(c, cls="logo") -%}
+{% if c.logo_src %}<img class="{{ cls }}" src="{{ c.logo_src }}" alt="{{ c.brand_name }}" data-qa="logo">{% endif %}
+{%- endmacro %}
+
+{% macro page_number(c, cls="page-num") -%}
+{% if c.slide_numbers %}<span class="{{ cls }}" data-qa="text" data-qa-role="meta" data-field="slide_numbers">{{ "%02d"|format(c.index) }} / {{ "%02d"|format(c.total) }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro handle(c, cls="handle") -%}
+{% if c.footer %}<span class="{{ cls }}" data-qa="text" data-qa-role="meta" data-field="footer">{{ c.footer }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro progress(c, cls="progress") -%}
+<div class="{{ cls }}" aria-hidden="true"><i style="width: {{ (c.index / c.total * 100)|round(2) }}%"></i></div>
+{%- endmacro %}
+
+{% macro swipe(c, cls="swipe") -%}
+{% if c.swipe_hint and not c.is_last %}<span class="{{ cls }}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>{% endif %}
+{%- endmacro %}
