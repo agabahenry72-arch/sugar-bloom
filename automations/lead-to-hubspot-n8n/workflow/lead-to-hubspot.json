@@ -1,0 +1,846 @@
+{
+  "id": "LeadToHubSpot001",
+  "name": "Lead intake -> HubSpot (clean, score, upsert, route)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a40a013a-c28f-5c69-a52c-b0fe51908450",
+      "name": "Lead form webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "0b7f5c52-3a0e-4f6b-9a37-5d8e2f1c4a10",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LeadFormSecret01",
+          "name": "Lead form webhook secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "34e2f610-417b-5825-a5e0-679da13ed746",
+              "name": "hubspotBaseUrl",
+              "value": "https://api.hubapi.com",
+              "type": "string"
+            },
+            {
+              "id": "a93742b9-d1be-596e-a54f-4705c98f3e23",
+              "name": "slackWebhookUrl",
+              "value": "https://hooks.slack.com/services/REPLACE/WITH/YOURS",
+              "type": "string"
+            },
+            {
+              "id": "45b712bb-6560-536a-b8f2-54d47ec48099",
+              "name": "nurtureListId",
+              "value": "REPLACE_WITH_LIST_ID",
+              "type": "string"
+            },
+            {
+              "id": "cacb524e-ad21-5a92-b3bd-edd0b44ab3e4",
+              "name": "hotScore",
+              "value": 60,
+              "type": "number"
+            },
+            {
+              "id": "f817e701-0256-57e2-a731-a02794915974",
+              "name": "warmScore",
+              "value": 30,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "84b6a3b3-e6f0-5f7a-b1b4-b34eeaf6039e",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node \"Clean & validate lead\" (Run Once for All Items).\n// Normalises a raw form/ad lead into HubSpot-ready fields and flags bad data.\n// Input: webhook items ({ body: {...} }). Output: { valid, errors, warnings, lead }.\n\nconst FREE_EMAIL_DOMAINS = new Set([\n  'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.co.uk', 'hotmail.com', 'outlook.com', 'live.com',\n  'icloud.com', 'me.com', 'aol.com', 'proton.me', 'protonmail.com', 'gmx.com', 'mail.com', 'yandex.com',\n]);\nconst COUNTRIES = {\n  us: 'United States', usa: 'United States', 'united states': 'United States', 'united states of america': 'United States',\n  uk: 'United Kingdom', gb: 'United Kingdom', 'great britain': 'United Kingdom', england: 'United Kingdom',\n  'united kingdom': 'United Kingdom', ca: 'Canada', canada: 'Canada', au: 'Australia', australia: 'Australia',\n  de: 'Germany', germany: 'Germany', fr: 'France', france: 'France', ug: 'Uganda', uganda: 'Uganda',\n  ke: 'Kenya', kenya: 'Kenya', ng: 'Nigeria', nigeria: 'Nigeria', in: 'India', india: 'India',\n};\nconst EMAIL = /^[^\\s@]+@[^\\s@]+\\.[a-z]{2,}$/i;\n\nconst text = (value) => (value === undefined || value === null ? '' : String(value).replace(/\\s+/g, ' ').trim());\nconst titleCase = (value) => value.toLowerCase().replace(/(^|[\\s'\u2019-])(\\p{L})/gu, (_, sep, ch) => sep + ch.toUpperCase());\n\nfunction normalisePhone(raw, country, warnings) {\n  const value = text(raw);\n  if (!value) return '';\n  const digits = value.replace(/\\D/g, '');\n  if (value.startsWith('+') && digits.length >= 8 && digits.length <= 15) return `+${digits}`;\n  if (value.startsWith('00') && digits.length >= 10) return `+${digits.slice(2)}`;\n  if (country === 'United States' || country === 'Canada') {\n    if (digits.length === 10) return `+1${digits}`;\n    if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;\n  }\n  warnings.push(`phone \"${value}\" kept as-is: add a country code to standardise it`);\n  return value;\n}\n\nfunction normaliseWebsite(raw) {\n  const value = text(raw).toLowerCase();\n  return value.replace(/^https?:\\/\\//, '').replace(/^www\\./, '').replace(/\\/+$/, '');\n}\n\nconst results = [];\nfor (const item of $input.all()) {\n  const body = item.json.body ?? item.json;\n  const errors = [];\n  const warnings = [];\n\n  const email = text(body.email).toLowerCase();\n  if (!email) errors.push('email is required');\n  else if (!EMAIL.test(email)) errors.push(`email \"${email}\" is not a valid address`);\n\n  let first = text(body.first_name ?? body.firstname ?? body.firstName);\n  let last = text(body.last_name ?? body.lastname ?? body.lastName);\n  const full = text(body.name ?? body.full_name ?? body.fullName);\n  if (!first && full) {\n    const parts = full.split(' ');\n    first = parts.shift();\n    last = last || parts.join(' ');\n  }\n  if (!first) warnings.push('no first name supplied');\n\n  const rawCountry = text(body.country);\n  const country = COUNTRIES[rawCountry.toLowerCase()] ?? (rawCountry ? titleCase(rawCountry) : '');\n  const utm = body.utm ?? {};\n  const domain = email.includes('@') ? email.split('@')[1] : '';\n\n  const lead = {\n    email,\n    firstname: first ? titleCase(first) : '',\n    lastname: last ? titleCase(last) : '',\n    phone: normalisePhone(body.phone, country, warnings),\n    company: text(body.company),\n    jobtitle: text(body.job_title ?? body.jobtitle ?? body.title),\n    website: normaliseWebsite(body.website) || (domain && !FREE_EMAIL_DOMAINS.has(domain) ? domain : ''),\n    country,\n    employees: Number.parseInt(text(body.employees ?? body.company_size).replace(/[^\\d]/g, ''), 10) || null,\n    budget: Number.parseInt(text(body.budget).replace(/[^\\d]/g, ''), 10) || null,\n    form: text(body.form ?? body.form_type).toLowerCase() || 'unknown',\n    message: text(body.message),\n    utm_source: text(body.utm_source ?? utm.source).toLowerCase(),\n    utm_medium: text(body.utm_medium ?? utm.medium).toLowerCase(),\n    utm_campaign: text(body.utm_campaign ?? utm.campaign).toLowerCase(),\n    marketing_consent: body.marketing_consent === true || ['yes', 'true', '1', 'on'].includes(text(body.marketing_consent).toLowerCase()),\n    email_domain: domain,\n    free_email: FREE_EMAIL_DOMAINS.has(domain),\n  };\n\n  results.push({ json: { valid: errors.length === 0, errors, warnings, lead, received_at: new Date().toISOString() } });\n}\nreturn results;\n"
+      },
+      "id": "9d8df9f6-eb8a-561f-97ad-1040c12b5309",
+      "name": "Clean & validate lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d99096a0-97d1-5ba4-a1ba-8393109a01e7",
+              "leftValue": "={{ $json.valid }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "08a71500-1cde-5002-be32-03847fbcf77a",
+      "name": "Valid lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'rejected', errors: $json.errors, warnings: $json.warnings }) }}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "id": "f86f568e-f5bd-5fdf-9e55-8e4b2d7b1b84",
+      "name": "Respond: invalid lead",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node \"Score lead\" (Run Once for All Items).\n// Transparent rule-based scoring: every point comes with a reason, so sales\n// can see why a lead was routed the way it was. Thresholds live in Config.\n\nconst config = $('Config').first().json;\n\nfunction score(lead) {\n  const reasons = [];\n  let points = 0;\n  const add = (value, why) => {\n    points += value;\n    reasons.push(`+${value} ${why}`);\n  };\n\n  if (lead.form === 'demo_request' || lead.form === 'demo') add(25, 'asked for a demo');\n  else if (lead.form === 'contact_sales') add(20, 'contacted sales');\n  if (!lead.free_email && lead.email_domain) add(20, 'business email');\n\n  const title = lead.jobtitle.toLowerCase();\n  if (/\\b(ceo|cmo|cto|coo|cfo|chief|founder|co-founder|owner|president|vp|vice president|head|director)\\b/.test(title)) {\n    add(30, `senior title (${lead.jobtitle})`);\n  } else if (/\\b(manager|lead|principal)\\b/.test(title)) {\n    add(15, `manager-level title (${lead.jobtitle})`);\n  }\n\n  if (lead.employees >= 200) add(25, `${lead.employees} employees`);\n  else if (lead.employees >= 50) add(15, `${lead.employees} employees`);\n  if (lead.budget >= 5000) add(20, `budget ${lead.budget}`);\n  if (['referral', 'partner'].includes(lead.utm_medium)) add(10, `${lead.utm_medium} traffic`);\n  if (lead.message.length >= 40) add(5, 'wrote a detailed message');\n\n  points = Math.min(points, 100);\n  const tier = points >= config.hotScore ? 'hot' : points >= config.warmScore ? 'warm' : 'cold';\n  return { score: points, tier, reasons };\n}\n\nreturn $input.all().map((item) => ({ json: { ...item.json, ...score(item.json.lead) } }));\n"
+      },
+      "id": "6a69c21b-d13c-5978-b37d-7e5ff7adf7f3",
+      "name": "Score lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.hubspotBaseUrl }}/crm/v3/objects/contacts/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ filterGroups: [{ filters: [{ propertyName: 'email', operator: 'EQ', value: $json.lead.email }] }], properties: ['email', 'firstname', 'lastname', 'phone', 'company', 'jobtitle', 'website', 'country', 'lifecyclestage', 'hs_lead_status'], limit: 1 }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "f98be95a-ca0c-5afd-b25e-152ea79bedfa",
+      "name": "HubSpot: find contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        200
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "HubSpotToken0001",
+          "name": "HubSpot private app token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node \"Merge with existing contact\" (Run Once for Each Item).\n// Decides create vs update and builds the HubSpot properties so that:\n//  - existing good data is never wiped by a blank form field\n//  - lifecycle stage only ever moves forward (HubSpot rejects going backwards)\n//  - latest attribution (UTMs) and the lead score are always refreshed\n\nconst STAGES = ['subscriber', 'lead', 'marketingqualifiedlead', 'salesqualifiedlead', 'opportunity', 'customer', 'evangelist'];\nconst PROTECTED_IF_SET = ['firstname', 'lastname', 'company', 'jobtitle', 'website', 'country'];\n\nconst { lead, score, tier, reasons, warnings } = $('Score lead').item.json;\nconst existing = $input.item.json.results?.[0] ?? null;\nconst current = existing?.properties ?? {};\n\nconst props = {\n  email: lead.email,\n  lead_score: String(score),\n  lead_tier: tier,\n};\nfor (const key of ['firstname', 'lastname', 'phone', 'company', 'jobtitle', 'website', 'country']) {\n  if (!lead[key]) continue; // never overwrite with blanks\n  if (existing && PROTECTED_IF_SET.includes(key) && current[key]) continue; // keep what sales already has\n  props[key] = lead[key];\n}\nfor (const key of ['utm_source', 'utm_medium', 'utm_campaign']) {\n  if (lead[key]) props[`latest_${key}`] = lead[key];\n}\nif (lead.marketing_consent) props.marketing_consent = 'true';\n\nconst wanted = tier === 'hot' ? 'marketingqualifiedlead' : 'lead';\nconst currentStage = STAGES.indexOf(current.lifecyclestage ?? '');\nif (STAGES.indexOf(wanted) > currentStage) props.lifecyclestage = wanted;\nif (!existing) props.hs_lead_status = 'NEW';\n\nreturn {\n  json: {\n    action: existing ? 'update' : 'create',\n    contactId: existing?.id ?? null,\n    properties: props,\n    score,\n    tier,\n    reasons,\n    warnings,\n  },\n};\n",
+        "mode": "runOnceForEachItem"
+      },
+      "id": "98a6fa48-398b-5dcc-82ff-e79581e9a041",
+      "name": "Merge with existing contact",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "daf19027-3bca-5f38-8e0d-ef8747bb13a1",
+              "leftValue": "={{ $json.action }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "create"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "82e12031-ee7f-5284-9868-e3dce8cfcc04",
+      "name": "New contact?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1580,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.hubspotBaseUrl }}/crm/v3/objects/contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: $json.properties }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "f1f6d88d-d568-5d18-a344-e0049970a424",
+      "name": "HubSpot: create contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        80
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "HubSpotToken0001",
+          "name": "HubSpot private app token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Config').first().json.hubspotBaseUrl }}/crm/v3/objects/contacts/{{ $json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: $json.properties }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "555862a5-9f74-54f2-b745-20640aab93ec",
+      "name": "HubSpot: update contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "HubSpotToken0001",
+          "name": "HubSpot private app token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node \"Result summary\" (Run Once for Each Item).\n// Runs after either the create or the update call and builds the response\n// returned to the form plus the data used for routing.\n\nconst plan = $('Merge with existing contact').item.json;\n\nreturn {\n  json: {\n    status: 'ok',\n    action: plan.action === 'create' ? 'created' : 'updated',\n    contactId: String($input.item.json.id ?? plan.contactId),\n    email: plan.properties.email,\n    score: plan.score,\n    tier: plan.tier,\n    reasons: plan.reasons,\n    warnings: plan.warnings,\n  },\n};\n",
+        "mode": "runOnceForEachItem"
+      },
+      "id": "f85df50b-67dd-5ce3-b0f8-3ef9a8b65bde",
+      "name": "Result summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2040,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "95b7e6f2-5a86-5022-9218-7f1e77167de1",
+                    "leftValue": "={{ $json.tier }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "hot"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "hot"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "62e9a4a1-6c89-568f-994c-ae1ee6cda3b2",
+                    "leftValue": "={{ $json.tier }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "warm"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "warm"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b39994d3-ee43-5747-8b5a-05317082b351",
+                    "leftValue": "={{ $json.tier }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "cold"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cold"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fd984374-a4d3-5dfe-85fc-9f241ba947b4",
+      "name": "Route by tier",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2440,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.slackWebhookUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: `:fire: Hot lead (${$json.score}/100): ${$json.email}\\n${$json.reasons.join('\\n')}` }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "b0cf10ed-4f89-5541-81f9-0fd1936f6233",
+      "name": "Slack: alert sales (hot lead)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2680,
+        20
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Config').first().json.hubspotBaseUrl }}/crm/v3/lists/{{ $('Config').first().json.nurtureListId }}/memberships/add",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify([ $json.contactId ]) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "ea4c489f-42d7-5333-bbbf-2d8472be7b7c",
+      "name": "HubSpot: add to nurture list",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2680,
+        220
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "HubSpotToken0001",
+          "name": "HubSpot private app token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.slackWebhookUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: `:warning: Couldn't add ${$('Result summary').item.json.email} to the nurture list: ${$json.error?.message ?? 'unknown error'}` }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "78731f8a-58a8-521b-99d4-1cab82d624aa",
+      "name": "Slack: alert ops (nurture failed)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2900,
+        400
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Result summary').item.json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "6d5683ce-53c3-5bbc-98eb-0ee3b726a62f",
+      "name": "Respond: lead saved",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3140,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').first().json.slackWebhookUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: `:rotating_light: HubSpot sync failed for ${$('Clean & validate lead').item.json.lead.email}: ${$json.error?.message ?? 'unknown error'}. Lead NOT saved; retry from n8n executions.` }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "57442f0f-edeb-5a42-84c7-cce3efc788d3",
+      "name": "Slack: alert ops (CRM error)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2040,
+        520
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'error', message: 'CRM sync failed; the team has been alerted', email: $('Clean & validate lead').item.json.lead.email }) }}",
+        "options": {
+          "responseCode": 502
+        }
+      },
+      "id": "59f2b34b-dcc7-5671-b38b-c4790f91a6e5",
+      "name": "Respond: CRM error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1. Intake\nWebsite / ad lead forms POST here.\nProtected by a secret header.",
+        "height": 380,
+        "width": 460,
+        "color": 7
+      },
+      "id": "dda733e0-e0e2-5943-80b5-c6364b2e7da7",
+      "name": "Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2. Data hygiene + scoring\nTrim, case, phone (E.164), country, UTMs.\nInvalid leads get a 422 with reasons.",
+        "height": 560,
+        "width": 640,
+        "color": 5
+      },
+      "id": "590e7c58-4828-56d9-a25f-bb3dc393243e",
+      "name": "Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3. HubSpot upsert\nSearch by email -> update or create.\nNever blanks existing data; lifecycle only moves forward.\n3 retries, then ops alert + 502.",
+        "height": 720,
+        "width": 1300,
+        "color": 4
+      },
+      "id": "5526bd8b-c4b2-54b9-90c7-9f1d147eea5e",
+      "name": "Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4. Routing\nhot -> Slack alert to sales\nwarm -> HubSpot nurture list\ncold -> saved only",
+        "height": 660,
+        "width": 900,
+        "color": 6
+      },
+      "id": "1f7d46db-0b7c-5d22-9ae2-ad0c6ec2fdfe",
+      "name": "Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        -100
+      ]
+    }
+  ],
+  "connections": {
+    "Lead form webhook": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Clean & validate lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean & validate lead": {
+      "main": [
+        [
+          {
+            "node": "Valid lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid lead?": {
+      "main": [
+        [
+          {
+            "node": "Score lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: invalid lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score lead": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: find contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: find contact": {
+      "main": [
+        [
+          {
+            "node": "Merge with existing contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack: alert ops (CRM error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge with existing contact": {
+      "main": [
+        [
+          {
+            "node": "New contact?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New contact?": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: create contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HubSpot: update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: create contact": {
+      "main": [
+        [
+          {
+            "node": "Result summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack: alert ops (CRM error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: update contact": {
+      "main": [
+        [
+          {
+            "node": "Result summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack: alert ops (CRM error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result summary": {
+      "main": [
+        [
+          {
+            "node": "Route by tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by tier": {
+      "main": [
+        [
+          {
+            "node": "Slack: alert sales (hot lead)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HubSpot: add to nurture list",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: lead saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: alert sales (hot lead)": {
+      "main": [
+        [
+          {
+            "node": "Respond: lead saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot: add to nurture list": {
+      "main": [
+        [
+          {
+            "node": "Respond: lead saved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack: alert ops (nurture failed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: alert ops (nurture failed)": {
+      "main": [
+        [
+          {
+            "node": "Respond: lead saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: alert ops (CRM error)": {
+      "main": [
+        [
+          {
+            "node": "Respond: CRM error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "active": false,
+  "tags": []
+}
